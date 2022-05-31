@@ -20,7 +20,7 @@ app.use(
   );
 
 /*get all persons*/
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
     Person.find({}).then(persons => {
         res.json(persons)
     })
@@ -28,7 +28,7 @@ app.get('/api/persons', (req, res) => {
 })
 
 /*info*/
-app.get('/info', (req, res) => {
+app.get('/info', (req, res, next) => {
     Person.find({}).then(persons => {
         res.send(
             `<p>Phonebook has info for ${persons.length} people</p>
@@ -68,10 +68,6 @@ app.post('/api/persons',(req, res, next) => {
         number: number,
     })
 
-    if(!body.name || !body.number){
-        return res.status(400).json({ error: 'name or number missing' })
-    }
-
     person
         .save()
         .then((savedPerson) => {
@@ -87,16 +83,13 @@ app.put('/api/persons/:id', (req, res, next) => {
 
     Person.findByIdAndUpdate(
         req.params.id,
-        {
-            name,
-            number
-        },
+        {name,number},
         { new: true, runValidators:true, context: 'query' }
     )
-    .then(updatedPerson => {
-        res.json(updatedPerson)
-    })
-    .catch(error => next(error))
+        .then(updatedPerson => {
+            res.json(updatedPerson)
+        })
+        .catch(error => next(error))
 })
 
 const unknownEndpoint = (req, res) => {
