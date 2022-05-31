@@ -96,6 +96,12 @@ app.get('/info', (req, res) => {
     res.send(`Phonebook has info for ${persons.length} people <br/> ${time}`)
 })
 
+/*readme*/
+app.get('/api/persons', (req, res) => {
+    res.sendFile('README.md', {root: __dirname})
+})
+
+
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
 console.log(`Server running on port ${PORT}`)
