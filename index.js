@@ -1,8 +1,9 @@
-require('dotenv').config()
+
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express() 
+require('dotenv').config()
 const Person = require('./models/person')
 
 
@@ -13,6 +14,10 @@ app.use(cors())
 morgan.token('body', (req, res) => { 
     return JSON.stringify(req.body)
 })
+
+app.use(
+    morgan(":url :method :body")
+  );
 
 /*get all persons*/
 app.get('/api/persons', (req, res) => {
@@ -47,7 +52,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 
 //delete person by id
 app.delete('/api/persons/:id', (req, res, next) => {
-    Person.findByIdAndRemove(req.params.id)
+    Person.findByIdAndDelete(req.params.id)
     .then(result => {
     res.status(204).end()
     })
@@ -55,16 +60,17 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 /*add new person to the list*/
-app.post('/api/persons', morgan(':url :method :body'),(req, res, next) => {
-    const body = req.body
+app.post('/api/persons',(req, res, next) => {
+    const { name, number} = req.body
+
+    const person = new Person({
+        name: name,
+        number: number,
+    })
+
     if(!body.name || !body.number){
         return res.status(400).json({ error: 'name or number missing' })
     }
-
-    const person = new Person({
-        name: body.name,
-        number: body.number,
-    })
 
     person
         .save()
