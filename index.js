@@ -4,7 +4,6 @@ const morgan = require('morgan')
 const cors = require('cors')
 const app = express() 
 const Person = require('./models/person')
-const { response } = require('express')
 
 
 app.use(express.json())
@@ -56,7 +55,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 /*add new person to the list*/
-app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
+app.post('/api/persons', morgan(':url :method :body'),(req, res, next) => {
     const body = req.body
     if(!body.name || !body.number){
         return res.status(400).json({ error: 'name or number missing' })
@@ -67,7 +66,8 @@ app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
         number: body.number,
     })
 
-    person.save()
+    person
+        .save()
         .then((savedPerson) => {
             res.json(savedPerson)
         })
@@ -77,13 +77,13 @@ app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
 
 //update person by id
 app.put('/api/persons/:id', (req, res, next) => {
-    const body = req.body
+    const {name, number} = req.body
 
     Person.findByIdAndUpdate(
         req.params.id,
         {
-            name: body.name,
-            number: body.number,
+            name,
+            number
         },
         { new: true, runValidators:true, context: 'query' }
     )
@@ -101,14 +101,13 @@ app.use(unknownEndpoint)
 
 const errorHandler = (error, req, res, next) => {  
     console.error(error.message)
-    if(error.name === 'CastError' && error.kind === 'ObjectId') {
+    if(error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' })
     } else if(error.name === 'ValidationError') {
         return res.status(400).json({ error: error.message })
     }
     next(error)
 }
-
 
 app.use(errorHandler)
 
