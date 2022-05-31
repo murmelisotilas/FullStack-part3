@@ -4,79 +4,15 @@ const morgan = require('morgan')
 const cors = require('cors')
 const app = express() 
 const Person = require('./models/person')
-
-let persons = [
-    { 
-      id: 1,
-      name: "Arto Hellas", 
-      number: "040-123456"
-    },
-    { 
-      id: 2,
-      name: "Ada Lovelace", 
-      number: "39-44-5323523"
-    },
-    { 
-      id: 3,
-      name: "Dan Abramov", 
-      number: "12-43-234345"
-    },
-    { 
-      id: 4,
-      name: "Mary Poppendieck", 
-      number: "39-23-6423122"
-    }
-]
+const { response } = require('express')
 
 
 app.use(express.json())
 app.use(express.static('build'))
 app.use(cors())
 
-app.get('/', (req, res) => {
-    res.send('<h1>Hello World!</h1>')
-})
-
 morgan.token('body', (req, res) => { 
     return JSON.stringify(req.body)
-})
-
-const generateId = () => {
-    return Math.floor(Math.random() * 10000)
-}
-
-/*add new person to the list*/
-app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
-    const body = req.body
-
-    if(!body.name || !body.number) {
-        return res.status(400).json({
-            error: 'name or number missing'
-        })
-    }
-
-    if(persons.find(person => person.name === body.name)) {
-        return res.status(400).json({
-            error: 'name is already in use'
-        })
-    }
-
-    const person = new Person({
-        name: body.name,
-        number: body.number,
-        id: generateId(),
-    })
-
-    person.save().then(savedPerson => {
-        res.json(savedPerson)
-    })
-})
-
-
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
-    res.status(204).end()
 })
 
 /*get all persons*/
@@ -84,30 +20,94 @@ app.get('/api/persons', (req, res) => {
     Person.find({}).then(persons => {
         res.json(persons)
     })
-})
-
-/*get person by id*/
-app.get('/api/persons/:id', (req, res) => {
-    Person.findById(req.params.id).then(person => {
-        res.json(person)
-    })
-    .catch(error => {
-        res.status(404).end()
-    })
+    .catch(error => next(error))
 })
 
 /*info*/
 app.get('/info', (req, res) => {
-    console.log(`Phonebook has info for ${persons.length} people`)
-    const time = new Date()
-    res.send(`Phonebook has info for ${persons.length} people <br/> ${time}`)
+    Person.find({}).then(persons => {
+        res.send(
+            `<p>Phonebook has info for ${persons.length} people</p>
+            <p>${new Date()}</p>`
+        )
+    })
+    .catch((error) => next(error))
 })
 
-/*readme*/
-app.get('/api/persons', (req, res) => {
-    res.sendFile('README.md', {root: __dirname})
+/*get person by id*/
+app.get('/api/persons/:id', (req, res, next) => {
+    Person.findById(req.params.id).then(person => {
+        if(person){
+        res.json(person)
+        } else {
+            res.status(404).end()
+        }
+    })
+    .catch(error => next(error))
 })
 
+//delete person by id
+app.delete('/api/persons/:id', (req, res, next) => {
+    Person.findByIdAndRemove(req.params.id)
+    .then(result => {
+    res.status(204).end()
+    })
+    .catch(error => next(error))
+})
+
+/*add new person to the list*/
+app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
+    const body = req.body
+
+    const person = new Person({
+        name: body.name,
+        number: body.number,
+    })
+
+    person.save()
+        .then((savedPerson) => {
+            res.json(savedPerson)
+            })
+            .catch(error => next(error))
+})
+
+
+//update person by id
+app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+
+    Person.findByIdAndUpdate(
+        req.params.id,
+        {
+            name: body.name,
+            number: body.number,
+        },
+        { new: true }
+    )
+    .then(updatedPerson => {
+        res.json(updatedPerson)
+    })
+    .catch(error => next(error))
+})
+
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, req, res, next) => {  
+    console.error(error.message)
+    if(error.name === 'CastError' && error.kind === 'ObjectId') {
+        return res.status(400).send({ error: 'malformatted id' })
+    } else if(error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message })
+    }
+    next(error)
+}
+
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
