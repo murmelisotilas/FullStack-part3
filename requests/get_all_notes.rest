@@ -2,7 +2,7 @@ GET http://localhost:3001/api/persons
 
 ###
 
-DELETE http://localhost:3001/api/persons/1
+DELETE http://localhost:3001/api/persons/629605426e9a29bc279e0da3
 
 ###
 
@@ -11,7 +11,7 @@ Content-Type: application/json
 
 {
   "name": "John Doe",
-  "number": "300"
+  "number": "30022999"
 }
 
 ###

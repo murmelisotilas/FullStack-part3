@@ -58,6 +58,9 @@ app.delete('/api/persons/:id', (req, res, next) => {
 /*add new person to the list*/
 app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
     const body = req.body
+    if(!body.name || !body.number){
+        return res.status(400).json({ error: 'name or number missing' })
+    }
 
     const person = new Person({
         name: body.name,
@@ -67,8 +70,8 @@ app.post('/api/persons', morgan(':url :method :body'),(req, res) => {
     person.save()
         .then((savedPerson) => {
             res.json(savedPerson)
-            })
-            .catch(error => next(error))
+        })
+        .catch(error => next(error))
 })
 
 
@@ -82,7 +85,7 @@ app.put('/api/persons/:id', (req, res, next) => {
             name: body.name,
             number: body.number,
         },
-        { new: true }
+        { new: true, runValidators:true, context: 'query' }
     )
     .then(updatedPerson => {
         res.json(updatedPerson)
