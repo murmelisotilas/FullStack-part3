@@ -2,7 +2,7 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-const app = express() 
+const app = express()
 require('dotenv').config()
 const Person = require('./models/person')
 
@@ -11,20 +11,20 @@ app.use(express.json())
 app.use(express.static('build'))
 app.use(cors())
 
-morgan.token('body', (req, res) => { 
+morgan.token('body', (req) => {
     return JSON.stringify(req.body)
 })
 
 app.use(
-    morgan(":url :method :body")
-  );
+    morgan(':url :method :body')
+)
 
 /*get all persons*/
 app.get('/api/persons', (req, res, next) => {
     Person.find({}).then(persons => {
         res.json(persons)
     })
-    .catch(error => next(error))
+        .catch(error => next(error))
 })
 
 /*info*/
@@ -35,33 +35,33 @@ app.get('/info', (req, res, next) => {
             <p>${new Date()}</p>`
         )
     })
-    .catch((error) => next(error))
+        .catch((error) => next(error))
 })
 
 /*get person by id*/
 app.get('/api/persons/:id', (req, res, next) => {
     Person.findById(req.params.id).then(person => {
         if(person){
-        res.json(person)
+            res.json(person)
         } else {
             res.status(404).end()
         }
     })
-    .catch(error => next(error))
+        .catch(error => next(error))
 })
 
 //delete person by id
 app.delete('/api/persons/:id', (req, res, next) => {
     Person.findByIdAndDelete(req.params.id)
-    .then(result => {
-    res.status(204).end()
-    })
-    .catch(error => next(error))
+        .then(() => {
+            res.status(204).end()
+        })
+        .catch(error => next(error))
 })
 
 /*add new person to the list*/
 app.post('/api/persons',(req, res, next) => {
-    const { name, number} = req.body
+    const { name, number } = req.body
 
     const person = new Person({
         name: name,
@@ -79,11 +79,11 @@ app.post('/api/persons',(req, res, next) => {
 
 //update person by id
 app.put('/api/persons/:id', (req, res, next) => {
-    const {name, number} = req.body
+    const { name, number } = req.body
 
     Person.findByIdAndUpdate(
         req.params.id,
-        {name,number},
+        { name,number },
         { new: true, runValidators:true, context: 'query' }
     )
         .then(updatedPerson => {
@@ -98,7 +98,7 @@ const unknownEndpoint = (req, res) => {
 
 app.use(unknownEndpoint)
 
-const errorHandler = (error, req, res, next) => {  
+const errorHandler = (error, req, res, next) => {
     console.error(error.message)
     if(error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' })
@@ -112,5 +112,5 @@ app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-console.log(`Server running on port ${PORT}`)
+    console.log(`Server running on port ${PORT}`)
 })
