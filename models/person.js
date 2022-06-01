@@ -15,21 +15,24 @@ mongoose.connect(url)
 const extraValidators = [
     {
         validator: (number) => {
-            if((number[2] === '-' || number[3] === '-') && number.length < 9) {
-                return false
+            if((number.lenght > 4) && (number[2] === '-' || number[3] === '-') && number.length < 9) {
+                return true
             }
-            return true
+            return false
         },
-        msg: '{VALUE} is not a valid phone number!'
+        message: '{VALUE} is not a valid phone number!'
     },
     {
         //allow only numbers and dashes
         validator: (number) => {
             return /^[0-9-]+$/.test(number)
         },
-        msg: '{VALUE} is not a valid phone number!'
+        message: '{VALUE} is not a valid phone number!'
     },
 ]
+
+
+
 
 const personSchema = new mongoose.Schema({
     name: {
