@@ -15,7 +15,7 @@ mongoose.connect(url)
 const extraValidators = [
     {
         validator: (number) => {
-            if((number.lenght > 4) && (number[2] === '-' || number[3] === '-') && number.length < 9) {
+            if((number[2] === '-' || number[3] === '-') &&  (number.length < 9)) {
                 return true
             }
             return false
@@ -27,7 +27,7 @@ const extraValidators = [
         validator: (number) => {
             return /^[0-9-]+$/.test(number)
         },
-        message: '{VALUE} is not a valid phone number!'
+        message: '{VALUE} is not proper phonenumber!'
     },
 ]
 
